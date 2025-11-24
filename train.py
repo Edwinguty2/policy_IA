@@ -4,13 +4,11 @@ import sys
 
 sys.path.append(os.getcwd())
 try:
-    from groups.GroupA.policy import WinortzPolicy
-    class RandomPolicy:
-        def mount(self, t): pass
-        def act(self, s):
-            v = [c for c in range(7) if s[0,c]==0]
-            return np.random.choice(v) if v else 0
-except: sys.exit()
+    from groups.GroupA.policy import MCTSPolicy
+    from groups.GroupB.policy import WinPolicy
+except:
+    print("Error importando policies")
+    sys.exit()
 
 def check_win(b, p):
     for r in range(6):
@@ -26,22 +24,45 @@ def check_win(b, p):
     return False
 
 def train_cycle(episodes=50):
-    hero = WinortzPolicy()
-    hero.mount(0.5) 
-    rival = RandomPolicy()
-
-    print(f"INICIANDO ENTRENAMIENTO DE ({episodes} Partidas)")
+    nueva = MCTSPolicy()
+    nueva.mount(0.5) 
     
+    try: 
+        vieja = WinPolicy()
+        vieja.mount(0.5)
+    except: 
+        print("No hay rival, entrenando contra random.")
+        class RandomPolicy:
+            def act(self, s): 
+                valid = [c for c in range(7) if s[0,c]==0]
+                return np.random.choice(valid) if valid else 0
+        vieja = RandomPolicy()
+
+    print(f"INICIANDO ENTRENAMIENTO: {episodes} Partidas")
+    print(f"Memoria Inicial: {len(nueva.knowledge_base)} estados")
+
     wins = 0
+    
     for i in range(episodes):
         board = np.zeros((6, 7))
         player = 1
         game_over = False
+        moves = 0
+        
+        p1, p2 = (nueva, vieja) if i % 2 == 0 else (vieja, nueva)
         
         while not game_over:
-            agent = hero if player == 1 else rival
-            try: action = agent.act(board)
-            except: action = 0
+            if p1 is None or p2 is None: break
+            
+            agent = p1 if player == 1 else p2
+            
+            try:
+                if agent == vieja:
+                    try: action = agent.act(board)
+                    except: action = np.random.choice([c for c in range(7) if board[0,c]==0])
+                else:
+                    action = agent.act(board)
+            except: break 
             
             for r in range(5, -1, -1):
                 if board[r, action] == 0:
@@ -50,15 +71,18 @@ def train_cycle(episodes=50):
             
             if check_win(board, player):
                 game_over = True
-                if agent == hero: wins += 1
-            elif np.count_nonzero(board) >= 42:
+                if (agent == nueva): wins += 1
+            elif moves >= 41:
                 game_over = True
+            
             player = -player
+            moves += 1
+            
         print(".", end="", flush=True)
 
-    print(f"\nWins: {wins}")
+    print(f"\nVictorias Nueva: {wins}/{episodes} ({ (wins/episodes)*100 }%)")
     
-    hero.save_knowledge()
+    nueva.save_smart_knowledge(min_visits=3, max_states=40000)
 
 if __name__ == "__main__":
     train_cycle(episodes=50)
