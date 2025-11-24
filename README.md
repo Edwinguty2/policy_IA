@@ -3,37 +3,6 @@
 Este repositorio contiene el entorno completo para ejecutar el **torneo de agentes de Connect4**.  
 Incluye grupos de políticas (agents), el main ejecutable del torneo y las herramientas internas necesarias.
 
----
-
-## Estructura del Proyecto
-
-tournament/
-│
-├── groups/
-│   ├── group_A/ El agente principal
-│   ├── policy.py 
-│   └── brain.pkl.gz # Archivo comprimido donde tu agente guarda el conocimiento
-│   │
-│   ├── group_B/  Primera versión del agente
-│   │ ├── init.py
-│   │ └── policy.py 
-│   │
-│   ├── group_C/  Agente aleatorio
-│   │ ├── init.py
-│   │ └── policy.py 
-│
-├── connect4/ # Motor del juego
-│ ├── init.py
-│ ├── dtos.py
-│ ├── policy.py
-│ ├── utils.py
-│ └──  enviroment_state.py
-│
-├── main.py 
-├── tournament.py 
-└── README.md (este documento)
-
-
 
 ##  ¿Cómo ejecutar este torneo?
 
